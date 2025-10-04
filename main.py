@@ -54,6 +54,18 @@ async def edit_produtc(id: int, data: dict):
         return {"data" : shop_db[id]}
     else:
         return {"msg" : "Товара не существует"}
+    
+@app.patch("/products/{id}", tags=["Продукты"])
+async def edit_partialy_produtc(id: int, data: dict):
+    if shop_db.get(id, None):
+        product = shop_db[id]
+        for k, v in data.items():
+            if product.get(k, None):
+                shop_db[id][k] = v
+        return {"msg" : "Товар обновлен!"}
+    else:
+        return {"msg" : "Товара не существует"}
+
 
 @app.delete("/products/{id}", tags=["Продукты"])
 async def delete_produtc(id: int):
