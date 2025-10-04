@@ -20,6 +20,8 @@ shop_db ={
     },
 }
 
+id_product = 3
+
 
 @app.get("/", tags=["Магазин"])
 async def home():
@@ -38,12 +40,11 @@ async def get_produtc(id: int):
     
 @app.post("/products/", tags=["Продукты"])
 async def add_produtc(data: dict):
-    id = len(shop_db.keys())
-    
-    if shop_db.get(id, None):
+    global id_product
+    if shop_db.get(id_product, None):
         return {"msg" : "Товар уже существует"}
     else:
-        shop_db[id] = data
+        shop_db[id_product] = data
         return {"msg" : data}
 
 @app.put("/products/{id}", tags=["Продукты"])
