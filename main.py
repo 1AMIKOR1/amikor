@@ -60,5 +60,16 @@ async def edit_product(id: int, data: dict):
         return {"msg" : "Товар обновлен!"}
     else:
         return {"msg" : "Товара не существует!"}
+    
+@app.patch("/products/{id}", tags=["Продукты"])
+async def edit_partialy_product(id: int, data: dict):
+    if shop_db.get(id, None):
+        product = shop_db[id]
+        for k, v in data.items():
+            if product.get(k, False):
+                shop_db[id][k] = v
+        return {"msg" : "Товар обновлен!"}
+    else:
+        return {"msg" : "Товара не существует!"}
 
 
