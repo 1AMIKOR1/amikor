@@ -53,4 +53,12 @@ async def delete_product(id: int):
     else:
         return {"msg" : "Товара не существует"}
 
+@app.put("/products/{id}", tags=["Продукты"])
+async def edit_product(id: int, data: dict):
+    if shop_db.get(id, None):
+        shop_db[id] = data
+        return {"msg" : "Товар обновлен!"}
+    else:
+        return {"msg" : "Товара не существует!"}
+
 
