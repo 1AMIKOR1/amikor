@@ -1,6 +1,5 @@
 import logging
 
-from aiosqlite import UniqueViolationError
 from pydantic import BaseModel
 from sqlalchemy import insert, select, update
 from sqlalchemy.exc import IntegrityError

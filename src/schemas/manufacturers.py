@@ -1,12 +1,12 @@
 from pydantic import BaseModel, EmailStr
 
-class SManufacturerlAdd(BaseModel):
+class SManufacturerAdd(BaseModel):
     title: str
     email: EmailStr
 
-class SManufacturerlGet(SManufacturerlAdd):
+class SManufacturerGet(SManufacturerAdd):
     id: int
 
-class SManufacturerlPatch(BaseModel):
+class SManufacturerPatch(BaseModel):
     title: str | None = None
     email: EmailStr | None = None
