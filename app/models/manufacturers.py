@@ -7,8 +7,8 @@ from app.database import Base
 if TYPE_CHECKING:
     from app.models.manufacturers import ProdutcsModel
 
-class RoomsModel(Base):
-    __tablename__ = "manufactures"
+class ManufacturersModel(Base):
+    __tablename__ = "manufacturers"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(String(100))
