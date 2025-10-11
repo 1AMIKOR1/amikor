@@ -1,7 +1,8 @@
 from fastapi import APIRouter
 
 router = APIRouter(prefix="/products", tags=["Продукты"])
-
+from src.repositories.produtcs import ProductsRepository
+from src.database import async_session_maker
 shop_db ={
     0 : {
         "name" : "Шампунь",
@@ -24,7 +25,9 @@ count:int = 3
 
 @router.get("/")
 async def get_products():
-    return {"data" : shop_db}
+    async with async_session_maker as session:
+        data = await ProductsRepository(session).get_filtered()
+    return {"data" : data}
 
 @router.get("/{id}", tags=["Продукты"])
 async def get_product(id: int):
