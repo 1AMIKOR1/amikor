@@ -8,7 +8,7 @@ from app.database import Base
 if TYPE_CHECKING:
     from app.models.manufacturers import ManufacturersModel
     
-class RoomsModel(Base):
+class ProductsModel(Base):
     __tablename__ = "products"
 
     id: Mapped[int] = mapped_column(primary_key=True)
