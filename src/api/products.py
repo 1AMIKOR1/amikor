@@ -25,7 +25,7 @@ count:int = 3
 
 @router.get("/")
 async def get_products():
-    async with async_session_maker as session:
+    async with async_session_maker() as session:
         data = await ProductsRepository(session).get_filtered()
     return {"data" : data}
 

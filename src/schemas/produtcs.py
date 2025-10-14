@@ -8,7 +8,7 @@ class SProductAdd(BaseModel):
 
 class SProductGet(SProductAdd):
     id: int
-    manufacturere: SManufacturerGet
+    manufacturer: SManufacturerGet
 
 class SProductPatch(BaseModel):
     manufacture_id: int | None = None

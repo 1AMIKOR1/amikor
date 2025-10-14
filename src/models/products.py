@@ -3,10 +3,11 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from typing import TYPE_CHECKING
 
+from src.models.manufacturers import ManufacturersModel
 from src.database import Base
 
-if TYPE_CHECKING:
-    from src.models.manufacturers import ManufacturersModel
+
+
     
 class ProductsModel(Base):
     __tablename__ = "products"
@@ -17,7 +18,7 @@ class ProductsModel(Base):
     price: Mapped[int]
     quantity: Mapped[int]
 
-    manufacturere: Mapped["ManufacturersModel"] = relationship(
-        back_populates="products",
+    manufacturer: Mapped[ManufacturersModel] = relationship("ManufacturersModel"
+       
     )
  

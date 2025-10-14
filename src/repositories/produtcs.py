@@ -17,7 +17,7 @@ class ProductsRepository(BaseRepository):
          filter_by = {k: v for k, v in filter_by.items() if v is not None}
          query = (
              select(self.model)
-             .options(joinedload(self.model.user))
+             .options(joinedload(self.model.manufacturer))
              .filter_by(**filter_by)
          )
 
@@ -37,7 +37,7 @@ class ProductsRepository(BaseRepository):
         filter_by = {k: v for k, v in filter_by.items() if v is not None}
         query = (
             select(self.model)
-            .options(joinedload(self.model.user))
+            .options(joinedload(self.model.manufacturer))
             .filter_by(**filter_by)
         )
 
