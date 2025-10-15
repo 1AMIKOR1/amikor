@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     )
     @property
     def get_db_url(self):
-        return ('sqlite+aiosqlite:///{self.DB_NAME}')
+        return (f'sqlite+aiosqlite:///{self.DB_NAME}')
     @property
     def auth_data(self):
         return {"secret_key": self.SECRET_KEY, "algorithm": self.ALGORITHM}
