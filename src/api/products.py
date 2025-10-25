@@ -1,6 +1,9 @@
 from fastapi import APIRouter
+from sqlalchemy.exc import IntegrityError
 
 router = APIRouter(prefix="/products", tags=["Продукты"])
+
+from src.schemas.produtcs import SProductAdd
 from src.repositories.produtcs import ProductsRepository
 from src.database import async_session_maker
 shop_db ={
@@ -31,21 +34,22 @@ async def get_products():
 
 @router.get("/{id}", tags=["Продукты"])
 async def get_product(id: int):
-    if shop_db.get(id, None):
-        return {"data" : shop_db[id]}
+    async with async_session_maker() as session:
+        data = await ProductsRepository(session).get_one_or_none(id=id)
+    if data:
+        return {"data" : data}
     else:
         return {"msg" : "Товара не существует"}
 
 @router.post("/", tags=["Продукты"])
-async def add_product(data: dict):
-    global count
-    id = count
-    if shop_db.get(id, None):
-        return {"msg" : "Такой товар существует"}
-    else:
-        shop_db[id] = data
-        count += 1
-        return {"data" : data}
+async def add_product(product: SProductAdd):
+    async with async_session_maker() as session:
+        try:
+            await ProductsRepository(session).add(product)
+        except IntegrityError:
+            return {"msg" : "Такой товар существует"}
+        await session.commit()
+    return {"Данные успешно добавлены!"}
     
 @router.put("/{id}", tags=["Продукты"])
 async def edit_product(id: int, data: dict):
