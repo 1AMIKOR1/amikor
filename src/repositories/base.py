@@ -19,7 +19,7 @@ class BaseRepository:
         filter_ = [v for v in filter if v is not None]
 
         query = select(self.model).filter(*filter_).filter_by(**filter_by)
-
+#dgdhgd
         if limit is not None and offset is not None:
             query = query.limit(limit).offset(offset)
         # print(query.compile(bind=engine, compile_kwargs={"literal_binds": True}))
