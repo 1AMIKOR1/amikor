@@ -3,7 +3,7 @@ from sqlalchemy.exc import IntegrityError
 
 router = APIRouter(prefix="/products", tags=["Продукты"])
 
-from src.schemas.produtcs import SProductAdd
+from src.schemas.produtcs import SProductAdd, SProductPatch
 from src.repositories.produtcs import ProductsRepository
 from src.database import async_session_maker
 shop_db ={
@@ -52,31 +52,38 @@ async def add_product(product: SProductAdd):
     return {"Данные успешно добавлены!"}
     
 @router.put("/{id}", tags=["Продукты"])
-async def edit_product(id: int, data: dict):
-    if shop_db.get(id, None):
-        shop_db[id] = data
-        return {"data" : shop_db[id]}
-    else:
+async def edit_product(id: int, data: SProductAdd):
+    async with async_session_maker() as session:
+        product = await ProductsRepository(session).get_one_or_none(id=id)
+        if product:
+            await ProductsRepository(session).edit(data, id=id)
+            await session.commit()
+            return {"msg" : "Данные обновлены!"}
+        
         return {"msg" : "Товара не существует"}  
 
 @router.patch("/{id}", tags=["Продукты"])
-async def edit_partialy_product(id: int, data: dict):
-    if shop_db.get(id, None):
-        product = shop_db[id]
-        for k, v in data.items():
-            if product.get(k, None):
-                shop_db[id][k] = v
-
-        return {"data" : shop_db[id]}
-    else:
-        return {"msg" : "Товара не существует"}   
+async def edit_partialy_product(id: int, data: SProductPatch):
+    async with async_session_maker() as session:
+        product = await ProductsRepository(session).get_one_or_none(id=id)
+        if product:
+            (
+                await ProductsRepository(session)
+                .edit(data, exclude_unset=True, id=id)
+            )
+            await session.commit()
+            return {"msg" : "Данные обновлены!"}
+        
+        return {"msg" : "Товара не существует"}  
 
 @router.delete("/{id}", tags=["Продукты"])
 async def delete_product(id: int):
-    if shop_db.get(id, None):
-        product = shop_db[id]
-        del shop_db[id]        
-        return {"msg" : f"{product} был удален"}
-    else:
+    async with async_session_maker() as session:
+        product = await ProductsRepository(session).get_one_or_none(id=id)
+        if product:
+            await ProductsRepository(session).delete(id=id)
+            await session.commit()
+            return {"msg" : f"{product} был удален"}
+        
         return {"msg" : "Товара не существует"}   
 

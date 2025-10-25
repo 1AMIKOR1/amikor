@@ -1,7 +1,7 @@
 import logging
 
 from pydantic import BaseModel
-from sqlalchemy import insert, select, update
+from sqlalchemy import delete, insert, select, update
 from sqlalchemy.exc import IntegrityError
 
 
@@ -11,6 +11,15 @@ class BaseRepository:
 
     def __init__(self, session):
         self.session = session
+
+    async def delete(self, *filters, **filter_by) -> None:
+        delete_stmt = delete(self.model)
+        if filters:
+            delete_stmt = delete_stmt.where(*filters)
+        if filter_by:
+            delete_stmt = delete_stmt.filter_by(**filter_by)
+
+        await self.session.execute(delete_stmt)
 
     async def get_all_with_paging(self, limit: int, offset: int):
         query = select(self.model).limit(limit).offset(offset)
