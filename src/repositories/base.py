@@ -56,8 +56,6 @@ class BaseRepository:
                 "Не удалось добавить данные в БД тип ошибки:%s",
                 type(ex.orig.__cause__),
             )
-            if isinstance(ex.orig.__cause__, UniqueViolationError):
-                raise ex
             logging.error(
                 "незнакомая ошибка: тип ошибки:%s", type(ex.orig.__cause__)
             )
