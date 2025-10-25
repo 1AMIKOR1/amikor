@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 from sqlalchemy import ForeignKey, String
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
 
@@ -14,8 +14,3 @@ class ManufacturersModel(Base):
     title: Mapped[str] = mapped_column(String(100))
     email: Mapped[str] = mapped_column(String(50))
 
-    produts: Mapped[list["ProdutcsModel"]] = relationship(
-        back_populates="products"
-
-    )
- 

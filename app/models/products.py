@@ -17,7 +17,7 @@ class ProductsModel(Base):
     price: Mapped[int]
     quantity: Mapped[int]
 
-    manufacturere: Mapped["ManufacturersModel"] = relationship(
+    manufacturer: Mapped["ManufacturersModel"] = relationship(
         back_populates="products",
 
     )
