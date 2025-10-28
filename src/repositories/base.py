@@ -45,7 +45,6 @@ class BaseRepository:
         return self.mapper.map_to_schema(model)
 
     async def add(self, data: BaseModel):
-        try:
             add_stmt = (
                 insert(self.model)
                 .values(**data.model_dump())
@@ -60,18 +59,7 @@ class BaseRepository:
                 return None
             return self.mapper.map_to_schema(model)
 
-        except IntegrityError as ex:
-            logging.error(
-                f"Не удалось добавить данные в БД тип ошибки:{type(ex.orig.__cause__)=}"
-            )
 
-            if isinstance(ex.orig.__cause__, UniqueViolationError):
-                raise ObjectAlreadyExistsException from ex
-            else:
-                logging.error(
-                    f"Не незнакомая ошибка: тип ошибки:{type(ex.orig.__cause__)=}"
-                )
-                raise ex
 
     async def add_bulk(self, data: list[BaseModel]) -> None | BaseModel:
         """
@@ -115,3 +103,12 @@ class BaseRepository:
             .values(**data.model_dump(exclude_unset=exclude_unset))
         )
         await self.session.execute(edit_stmt)
+    
+    async def delete(self, *filters, **filter_by) -> None:
+        delete_stmt = delete(self.model)
+        if filters:
+            delete_stmt = delete_stmt.where(*filters)
+        if filter_by:
+            delete_stmt = delete_stmt.filter_by(**filter_by)
+
+        await self.session.execute(delete_stmt)
