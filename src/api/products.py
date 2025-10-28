@@ -1,5 +1,8 @@
 from fastapi import APIRouter
 
+from src.repositories.products import ProductsRepository
+from src.database import async_session_maker
+
 router = APIRouter(prefix="/products", tags=["Продукты"])
 
 shop_db ={
@@ -25,12 +28,16 @@ id_product = 3
 @router.get("/", tags=["Продукты"])
 async def get_produtcs():
     return {"data" : shop_db}
+
 @router.get("/{id}", tags=["Продукты"])
-async def get_produtc(id: int):
-    if shop_db.get(id, None):
-        return {"data" : shop_db[id]}
+async def get_product(id: int):
+    async with async_session_maker() as session:
+        data = await ProductsRepository(session).get_one_or_none(id=id)
+    if data:
+        return {"data" : data}
     else:
         return {"msg" : "Товара не существует"}
+    
 @router.post("/", tags=["Продукты"])
 async def add_product(data: dict):
     global id_product
