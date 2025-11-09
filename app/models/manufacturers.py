@@ -1,11 +1,8 @@
-from typing import TYPE_CHECKING
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
 
-if TYPE_CHECKING:
-    from app.models.manufacturers import ProdutcsModel
 
 class ManufacturersModel(Base):
     __tablename__ = "manufacturers"
