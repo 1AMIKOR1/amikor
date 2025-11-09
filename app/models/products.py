@@ -12,13 +12,7 @@ class ProductsModel(Base):
     __tablename__ = "products"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    manufacture_id: Mapped[int] = mapped_column(ForeignKey("manufacturers.id"))
+    manufacturer_id: Mapped[int] = mapped_column(ForeignKey("manufacturers.id"))
     title: Mapped[str] = mapped_column(String(100))
     price: Mapped[int]
     quantity: Mapped[int]
-
-    manufacturer: Mapped["ManufacturersModel"] = relationship(
-        back_populates="products",
-
-    )
- 
