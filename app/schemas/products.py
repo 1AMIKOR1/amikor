@@ -1,5 +1,4 @@
-from pydantic import BaseModel, ConfigDict
-from app.schemas.manufacturers import SManufacturerGet
+from pydantic import BaseModel
 
 class SProductAdd(BaseModel):
     manufacturer_id: int
@@ -9,5 +8,3 @@ class SProductAdd(BaseModel):
    
 class SProductGet(SProductAdd):
     id: int
-    manufacturer: SManufacturerGet
-    model_config = ConfigDict(from_attributes=True)
