@@ -15,7 +15,7 @@ class AdminAuth(AuthenticationBackend):
         try:
             user_data = SUserAuth(email=form["username"], password=form["password"])
         except ValidationError as e:
-            return False
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=e.message) from e
         user = await authenticate_user(email=user_data.email, password=user_data.password)
         if user is None:
             raise HTTPException(status_code=400, detail="Invalid user")
