@@ -1,18 +1,19 @@
 from pydantic import BaseModel, ConfigDict, EmailStr
 from app.models.users import UsersRoles
 
+
 class SUserAddRequest(BaseModel):
     name: str
     email: EmailStr
     password: str
-    role: UsersRoles | None = UsersRoles.USER
+    role: str | None = "USER"
 
 
 class SUserAdd(BaseModel):
     name: str
     email: EmailStr
-    hash_password: str
-    role: UsersRoles | None = UsersRoles.USER
+    hashed_password: str
+    role: str | None = "USER"
 
 
 class SUserGet(SUserAdd):
