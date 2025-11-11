@@ -1,13 +1,14 @@
 from sqlalchemy import ForeignKey, String
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column
 
 from typing import TYPE_CHECKING
 
-from app.database import Base
+from app.database.database import Base
 
 if TYPE_CHECKING:
-    from app.models.manufacturers import ManufacturersModel
-    
+    pass
+
+
 class ProductsModel(Base):
     __tablename__ = "products"
 
