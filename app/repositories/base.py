@@ -1,9 +1,17 @@
+import logging
+
 from pydantic import BaseModel
 from sqlalchemy import delete, insert, select, update
+from sqlalchemy.exc import IntegrityError
+
+
+from app.database.database import Base
+from app.exceptions.base import ObjectAlreadyExistsError
+
 
 class BaseRepository:
-    model = None
-    schema = None
+    model: Base = None
+    schema: BaseModel = None
 
     def __init__(self, session):
         self.session = session
@@ -15,23 +23,18 @@ class BaseRepository:
         *filter,
         **filter_by,
     ) -> list[BaseModel]:
-        filter_by = {
-            k: v for k, v in filter_by.items() if v is not None
-        }
+        filter_by = {k: v for k, v in filter_by.items() if v is not None}
         filter_ = [v for v in filter if v is not None]
 
-        query = (
-            select(self.model)
-            .filter(*filter_)
-            .filter_by(**filter_by)
-        )
+        query = select(self.model).filter(*filter_).filter_by(**filter_by)
 
         if limit is not None and offset is not None:
             query = query.limit(limit).offset(offset)
         # print(query.compile(bind=engine, compile_kwargs={"literal_binds": True}))
         result = await self.session.execute(query)
         result = [
-            self.schema.model_validate(model) for model in result.scalars().all()
+            self.schema.model_validate(model, from_attributes=True)
+            for model in result.scalars().all()
         ]
 
         return result
@@ -48,14 +51,13 @@ class BaseRepository:
         model = result.scalars().one_or_none()
         if model is None:
             return None
-        return self.mapper.map_to_schema(model)
+        result = self.schema.model_validate(model, from_attributes=True)
+        return result
 
     async def add(self, data: BaseModel):
         try:
             add_stmt = (
-                insert(self.model)
-                .values(**data.model_dump())
-                .returning(self.model)
+                insert(self.model).values(**data.model_dump()).returning(self.model)
             )
             # print(add_stmt.compile(compile_kwargs={"literal_binds": True}))
 
@@ -64,40 +66,28 @@ class BaseRepository:
             model = result.scalars().one_or_none()
             if model is None:
                 return None
-            return self.mapper.map_to_schema(model)
+            return self.schema.model_validate(model, from_attributes=True)
 
-        except IntegrityError as ex:
-            logging.error(
-                f"Не удалось добавить данные в БД тип ошибки:{type(ex.orig.__cause__)=}"
-            )
-
-            if isinstance(ex.orig.__cause__, UniqueViolationError):
-                raise ObjectAlreadyExistsException from ex
-            else:
-                logging.error(
-                    f"Не незнакомая ошибка: тип ошибки:{type(ex.orig.__cause__)=}"
-                )
-                raise ex
+        except IntegrityError as exc:
+            raise ObjectAlreadyExistsError from exc
 
     async def add_bulk(self, data: list[BaseModel]) -> None | BaseModel:
         """
         Метод для множественного добавления данных в таблицу
         """
-        add_stmt = insert(self.model).values(
-            [item.model_dump() for item in data]
-        )
+        add_stmt = insert(self.model).values([item.model_dump() for item in data])
         # print(add_stmt.compile(compile_kwargs={"literal_binds": True}))
         await self.session.execute(add_stmt)
 
     async def delete(self, *filters, **filter_by) -> None:
-        query = select(self.model)
-        if filters:
-            query = query.where(*filters)
-        if filter_by:
-            query = query.filter_by(**filter_by)
-
-        result = await self.session.execute(query)
-        existing_records = result.scalars().all()
+        # query = select(self.model)
+        # if filters:
+        #     query = query.where(*filters)
+        # if filter_by:
+        #     query = query.filter_by(**filter_by)
+        #
+        # result = await self.session.execute(query)
+        # existing_records = result.scalars().all()
         # if not existing_records:
         #     raise ObjectNotFoundException()
 
