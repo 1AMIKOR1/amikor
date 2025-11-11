@@ -6,6 +6,7 @@ from app.exceptions.auth import (
     UserNotFoundError,
     InvalidPasswordError,
 )
+from app.exceptions.base import ObjectAlreadyExistsError
 from app.schemas.users import SUserAdd, SUserAddRequest, SUserGet
 from app.services.base import BaseService
 import jwt
@@ -36,23 +37,28 @@ class AuthService(BaseService):
 
     def decode_token(self, token: str) -> dict:
         try:
-            return jwt.decode(token, settings.JWT_SECRET_KEY, [settings.JWT_ALGORITHM])
+            return jwt.decode(token, settings.SECRET_KEY, [settings.ALGORITHM])
         except jwt.exceptions.DecodeError as ex:
             raise InvalidJWTTokenError from ex
 
     async def register_user(self, user_data: SUserAddRequest):
-        user = await self.db.users.get_one_or_none(email=user_data.email)
-        if user:
+        # user = await self.db.users.get_one_or_none(email=user_data.email)
+        # if user:
+        #     raise UserAlreadyExistsError
+        try:
+            hashed_password: str = AuthService().hash_password(user_data.password)
+            new_user_data = SUserAdd(
+                email=user_data.email,
+                hashed_password=hashed_password,
+                name=user_data.name,
+            )
+            await self.db.users.add(new_user_data)
+            await self.db.commit()
+        except ObjectAlreadyExistsError:
             raise UserAlreadyExistsError
-        hashed_password: str = AuthService().hash_password(user_data.password)
-        new_user_data = SUserAdd(
-            email=user_data.email, hashed_password=hashed_password, name=user_data.name
-        )
-        await self.db.users.add(new_user_data)
-        await self.db.commit()
 
     async def login_user(self, user_data: SUserAddRequest):
-        user = await self.db.users.get_user_with_hashed_password(email=user_data.email)
+        user = await self.db.users.get_one_or_none(email=user_data.email)
         if not user:
             raise UserNotFoundError
         if not self.verify_password(user_data.password, user.hashed_password):
