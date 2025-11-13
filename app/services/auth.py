@@ -20,7 +20,8 @@ class InvalidJWTTokenError:
 class AuthService(BaseService):
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-    def create_access_token(self, data: dict) -> str:
+    @classmethod
+    def create_access_token(cls, data: dict) -> str:
         to_encode = data.copy()
         expire: datetime = datetime.now(timezone.utc) + timedelta(
             minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
@@ -29,13 +30,16 @@ class AuthService(BaseService):
         encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, settings.ALGORITHM)
         return encoded_jwt
 
-    def verify_password(self, plain_password, hashed_password) -> bool:
-        return self.pwd_context.verify(plain_password, hashed_password)
+    @classmethod
+    def verify_password(cls, plain_password, hashed_password) -> bool:
+        return cls.pwd_context.verify(plain_password, hashed_password)
 
-    def hash_password(self, plain_password) -> str:
-        return self.pwd_context.hash(plain_password)
+    @classmethod
+    def hash_password(cls, plain_password) -> str:
+        return cls.pwd_context.hash(plain_password)
 
-    def decode_token(self, token: str) -> dict:
+    @classmethod
+    def decode_token(cls, token: str) -> dict:
         try:
             return jwt.decode(token, settings.SECRET_KEY, [settings.ALGORITHM])
         except jwt.exceptions.DecodeError as ex:
@@ -46,7 +50,7 @@ class AuthService(BaseService):
         # if user:
         #     raise UserAlreadyExistsError
         try:
-            hashed_password: str = AuthService().hash_password(user_data.password)
+            hashed_password: str = self.hash_password(user_data.password)
             new_user_data = SUserAdd(
                 email=user_data.email,
                 hashed_password=hashed_password,
@@ -66,7 +70,7 @@ class AuthService(BaseService):
         access_token: str = self.create_access_token(
             {
                 "user_id": user.id,
-                "role": user.role,
+                "role": user.role_id,
             }
         )
         return access_token
