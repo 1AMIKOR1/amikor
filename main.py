@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from sqladmin import Admin
 
 # from admin_panel.auth_admin_panel import authentication_backend
-from admin_panel.views import UsersView, ProductsView
+from admin_panel.views import ManufacturersView, UsersView, ProductsView, RolesView
 from app.api.auth import router as auth_router
 from app.database.database import engine
 
@@ -25,3 +25,5 @@ admin = Admin(
 )
 admin.add_view(UsersView)
 admin.add_view(ProductsView)
+admin.add_view(ManufacturersView)
+admin.add_view(RolesView)
