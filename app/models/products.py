@@ -1,12 +1,9 @@
 from sqlalchemy import ForeignKey, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from typing import TYPE_CHECKING
 
 from app.database.database import Base
 
-if TYPE_CHECKING:
-    pass
 
 
 class ProductsModel(Base):
@@ -17,3 +14,4 @@ class ProductsModel(Base):
     title: Mapped[str] = mapped_column(String(100))
     price: Mapped[int]
     quantity: Mapped[int]
+    manufacturer = relationship("ManufacturersModel")
