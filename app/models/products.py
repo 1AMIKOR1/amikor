@@ -14,4 +14,5 @@ class ProductsModel(Base):
     title: Mapped[str] = mapped_column(String(100))
     price: Mapped[int]
     quantity: Mapped[int]
+    photo: Mapped[str | None] = mapped_column(String(100), default= None)
     manufacturer = relationship("ManufacturersModel")
