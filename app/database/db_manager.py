@@ -1,7 +1,9 @@
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
+
 from app.repositories.manufacturers import ManufacturersRepository
 from app.repositories.products import ProductsRepository
+from app.repositories.roles import RolesRepository
 from app.repositories.users import UsersRepository
 
 
@@ -14,6 +16,7 @@ class DBManager:
         self.users = UsersRepository(self.session)
         self.products = ProductsRepository(self.session)
         self.manufacturers = ManufacturersRepository(self.session)
+        self.roles = RolesRepository(self.session)
         return self
 
     async def __aexit__(self, *args):
