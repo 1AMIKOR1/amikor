@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, EmailStr
 
 class SManufacturerAdd(BaseModel):
     title: str
@@ -6,4 +6,3 @@ class SManufacturerAdd(BaseModel):
    
 class SManufacturerGet(SManufacturerAdd):
     id: int
-    model_config = ConfigDict(from_attributes=True)
