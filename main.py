@@ -1,13 +1,14 @@
 from fastapi import FastAPI
 from sqladmin import Admin
+from starlette.staticfiles import StaticFiles
 
-# from admin_panel.auth_admin_panel import authentication_backend
+from admin_panel.auth import authentication_backend
 from admin_panel.views import ManufacturersView, UsersView, ProductsView, RolesView
 from app.api.auth import router as auth_router
 from app.database.database import engine
 
 app = FastAPI(title="MyShop", version="0.0.1")
-
+app.mount('/static', StaticFiles(directory='app/static'), 'static')
 
 @app.get("/", tags=["Магазин"])
 async def home():
@@ -19,7 +20,7 @@ app.include_router(auth_router)
 admin = Admin(
     app,
     engine,
-    # authentication_backend=authentication_backend,
+    authentication_backend=authentication_backend,
     title="Админ панель",
     templates_dir="admin_panel/templates",
 )
