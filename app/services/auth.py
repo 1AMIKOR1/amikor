@@ -4,17 +4,14 @@ from app.config import settings
 from app.exceptions.auth import (
     UserAlreadyExistsError,
     UserNotFoundError,
-    InvalidPasswordError,
+    InvalidPasswordError, InvalidJWTTokenError, JWTTokenExpiredError,
 )
 from app.exceptions.base import ObjectAlreadyExistsError
-from app.schemas.users import SUserAdd, SUserAddRequest, SUserGet
+from app.schemas.users import SUserAdd, SUserAddRequest, SUserGet, SUserAuth
 from app.services.base import BaseService
 import jwt
 from passlib.context import CryptContext
 
-
-class InvalidJWTTokenError:
-    pass
 
 
 class AuthService(BaseService):
@@ -44,6 +41,8 @@ class AuthService(BaseService):
             return jwt.decode(token, settings.SECRET_KEY, [settings.ALGORITHM])
         except jwt.exceptions.DecodeError as ex:
             raise InvalidJWTTokenError from ex
+        except jwt.exceptions.ExpiredSignatureError as ex:
+            raise JWTTokenExpiredError from ex
 
     async def register_user(self, user_data: SUserAddRequest):
         # user = await self.db.users.get_one_or_none(email=user_data.email)
@@ -55,22 +54,24 @@ class AuthService(BaseService):
                 email=user_data.email,
                 hashed_password=hashed_password,
                 name=user_data.name,
+                role_id=user_data.role_id
             )
             await self.db.users.add(new_user_data)
             await self.db.commit()
         except ObjectAlreadyExistsError:
             raise UserAlreadyExistsError
 
-    async def login_user(self, user_data: SUserAddRequest):
+    async def login_user(self, user_data: SUserAuth):
         user = await self.db.users.get_one_or_none(email=user_data.email)
         if not user:
             raise UserNotFoundError
         if not self.verify_password(user_data.password, user.hashed_password):
             raise InvalidPasswordError
+        role = await self.db.roles.get_one_or_none(id=user.role_id)
         access_token: str = self.create_access_token(
             {
                 "user_id": user.id,
-                "role": user.role_id,
+                "role": role.title,
             }
         )
         return access_token

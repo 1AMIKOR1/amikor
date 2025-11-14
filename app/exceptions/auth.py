@@ -8,6 +8,9 @@ class UserAlreadyExistsError(MyAppError):
 class InvalidJWTTokenError(MyAppError):
     detail = "Неверный токен"
 
+class JWTTokenExpiredError(MyAppError):
+    detail = "Неверный токен"
+
 
 class InvalidPasswordError(MyAppError):
     detail = "Неверный пароль"
@@ -21,6 +24,9 @@ class InvalidTokenHTTPError(MyAppHTTPError):
     status_code = 401
     detail = "Неверный токен доступа"
 
+class JWTTokenExpiredHTTPError(MyAppHTTPError):
+    status_code = 401
+    detail = "Токен истек, необходимо снова авторизироваться"
 
 class NoAccessTokenHTTPError(MyAppHTTPError):
     detail = "Вы не предоставили токен доступа"

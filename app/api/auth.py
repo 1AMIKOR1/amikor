@@ -10,7 +10,7 @@ from app.exceptions.auth import (
     InvalidPasswordError,
     InvalidPasswordHTTPError,
 )
-from app.schemas.users import SUserAddRequest, SUserGet
+from app.schemas.users import SUserAddRequest, SUserGet, SUserAuth
 from app.services.auth import AuthService
 
 router = APIRouter(prefix="/auth", tags=["Авторизация и аутентификация"])
@@ -32,7 +32,7 @@ async def register_user(
 async def login_user(
     db: DBDep,
     response: Response,
-    user_data: SUserAddRequest,
+    user_data: SUserAuth,
 ) -> dict[str, str]:
     try:
         access_token: str = await AuthService(db).login_user(user_data)
