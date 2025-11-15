@@ -5,6 +5,7 @@ class SProductAdd(BaseModel):
     title: str
     price: int
     quantity: int
+    photo: str
    
 class SProductGet(SProductAdd):
     id: int
