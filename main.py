@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from sqladmin import Admin
 from starlette.staticfiles import StaticFiles
 
+from admin_panel.admin import CustomAdmin
 from admin_panel.auth import authentication_backend
 from admin_panel.views import ManufacturersView, UsersView, ProductsView, RolesView
 from app.api.auth import router as auth_router
@@ -17,13 +18,14 @@ async def home():
 
 app.include_router(auth_router)
 
-admin = Admin(
+admin = CustomAdmin(
     app,
     engine,
     authentication_backend=authentication_backend,
     title="Админ панель",
     templates_dir="admin_panel/templates",
 )
+
 admin.add_view(UsersView)
 admin.add_view(ProductsView)
 admin.add_view(ManufacturersView)

@@ -1,19 +1,12 @@
-import shutil
 from copy import copy
-from datetime import datetime
-from pathlib import Path
 from typing import Any
-
-import wtforms
-from fastapi import UploadFile
 from sqladmin import ModelView
+from starlette.datastructures import UploadFile
 from starlette.requests import Request
-from wtforms import PasswordField, StringField
-from sqladmin.forms import Form
+from wtforms import FileField
 from wtforms.validators import DataRequired
 
-from app.exceptions.auth import InvalidJWTTokenError, InvalidTokenHTTPError, JWTTokenExpiredError, \
-    JWTTokenExpiredHTTPError
+from admin_panel.utils import get_user_data, save_photo, get_current_photo_path, delete_old_photo
 from app.models.manufacturers import ManufacturersModel
 from app.models.products import ProductsModel
 from app.models.roles import RolesModel
@@ -85,8 +78,6 @@ class UsersView(ModelView, model=UsersModel):
         user_data = get_user_data(request)
         return user_data.get("role", None) in ["ADMIN"]
 
-
-
 class ProductsView(ModelView, model=ProductsModel):
     column_list = [
         ProductsModel.title,
@@ -99,9 +90,8 @@ class ProductsView(ModelView, model=ProductsModel):
     # category = "Products"  # Group in sidebar
     category_icon = "fa-solid fa-shopping-bag"  # Icon for category
     column_searchable_list = [ProductsModel.title, ProductsModel.price, ProductsModel.quantity]
-    form_overrides = {
-        "photo": wtforms.FileField
-    }
+    form_overrides = dict(photo=FileField)
+
     form_args = {
         "title": {
             "label": "Название",
@@ -128,11 +118,12 @@ class ProductsView(ModelView, model=ProductsModel):
         user_data = get_user_data(request)
         return user_data.get("role", None) in ["ADMIN","MANUFACTURER"]
 
+
     async def insert_model(self, request: Request, data: dict) -> Any:
         try:
             photo = data.pop("photo", None)
             if photo:
-                if photo.filename:  # Проверяем что файл действительно загружен
+                if isinstance(photo, UploadFile) and photo.filename:  # Проверяем что файл действительно загружен
                     photo_path = await save_photo(photo, "products")
                     data['photo'] = photo_path
                 else:
@@ -148,36 +139,33 @@ class ProductsView(ModelView, model=ProductsModel):
         model = await self.get_object_for_edit(modified_request)
         # Получаем текущее фото записи
         current_photo_path = await get_current_photo_path(model)
-
+        photo = data.get("photo", None)
         # Обрабатываем новое фото
-        if 'photo' in data:
+        if photo and isinstance(photo, UploadFile):
             dir_title = "products"
-            new_photo = data.pop('photo')
-            new_photo_path = await save_photo(new_photo,dir_title)
+            new_photo_path = await save_photo(photo,dir_title)
             data['photo'] = new_photo_path
 
             # Удаляем старое фото ЭТОЙ ЖЕ записи
             if current_photo_path:
                 await delete_old_photo(current_photo_path, dir_title)
-
+        else:
+            data['photo'] = current_photo_path = await get_current_photo_path(model)
         return await super().update_model(request, pk, data)
 
     async def delete_model(self, request: Request, pk: Any) -> None:
         """Дополнительно: удаляем фото при удалении модели"""
+        dir_title = "products"
+        modified_request = copy(request)
+        modified_request.path_params["pk"] = pk
+        model = await self.get_object_for_delete(pk)
+        # Получаем текущее фото записи
+        current_photo_path = await get_current_photo_path(model)
+        if current_photo_path:
+            await delete_old_photo(current_photo_path, dir_title)
         try:
-            modified_request = copy(request)
-            modified_request.path_params["pk"] = pk
-            model = await self.get_object_for_edit(modified_request)
-            # Получаем путь к фото перед удалением
-            photo_path = await get_current_photo_path(model)
-
             # Удаляем модель
             result = await super().delete_model(request, pk)
-
-            # Удаляем файл фото после успешного удаления модели
-            if photo_path:
-                await delete_old_photo(photo_path, "products")
-
             return result
         except Exception as e:
             print(f"Error in delete_model: {e}")
@@ -199,59 +187,3 @@ class ManufacturersView(ModelView, model=ManufacturersModel):
         return user_data.get("role", None) in ["ADMIN"]
 
 
-async def save_photo(photo: UploadFile, dir_title: str) -> str:
-    """Сохраняет фото и возвращает путь"""
-    try:
-        # Создаем папку если ее нет
-        photo_dir = Path(f"app/static/images/{dir_title}/")
-        photo_dir.mkdir(parents=True, exist_ok=True)
-
-        # Генерируем уникальное имя файла
-        timestamp = int(datetime.now().timestamp())
-        file_extension = Path(photo.filename).suffix if photo.filename else '.webp'
-        filename = f"photo_{timestamp}{file_extension}"
-        file_path = photo_dir / filename
-
-        # Сохраняем файл
-        with open(file_path, "wb+") as buffer:
-            shutil.copyfileobj(photo.file, buffer)
-
-        return f"/static/images/{dir_title}/{filename}"
-
-    except Exception as e:
-        print(f"Error saving photo: {e}")
-        raise
-
-async def delete_old_photo(photo: str, dir_title: str) -> None:
-    """Удаляет старое фото если оно существует"""
-    try:
-        if photo and photo != "":  # Проверяем что путь не пустой
-            photo_name = photo.split("/")[-1]
-            if photo_name != "not_found.png":
-                photo_dir = Path(f"app/static/images/{dir_title}/{photo_name}")
-                old_path = photo_dir
-                if old_path.exists() and old_path.is_file():
-                    old_path.unlink()
-    except Exception as e:
-        print(f"Error deleting old photo {photo_dir}: {e}")
-
-async def get_current_photo_path(model) -> str | None:
-        """Получает текущий путь к фото модели"""
-        try:
-            if model and hasattr(model, 'photo'):
-                current_photo = getattr(model, 'photo', None)
-                # Проверяем что это строка и не пустая
-                if isinstance(current_photo, str) and current_photo.strip():
-                    return current_photo
-        except Exception as e:
-            print(f"Error getting current photo path: {e}")
-        return None
-def get_user_data(request: Request):
-    try:
-        token = request.session.get('access_token')
-        return AuthService.decode_token(token)
-    except InvalidJWTTokenError:
-        raise InvalidTokenHTTPError
-    except JWTTokenExpiredError:
-        request.session.clear()
-        raise JWTTokenExpiredHTTPError
